@@ -11,6 +11,8 @@ import gc
 import json
 from typing import List, Optional, Tuple, Any, Dict
 
+from .download_utils import KNOWN_MODEL_REPOS, ensure_tokenizer, ensure_model
+
 # Setup logging
 logger = logging.getLogger("VibeVoice")
 
@@ -105,6 +107,12 @@ def get_available_models() -> List[Tuple[str, str]]:
             display_name = transform_folder_name(folder, valid_folders)
             models.append((folder, display_name))
             logger.debug(f"Found model: {display_name} in folder: {folder}")
+
+        # Add known downloadable models that aren't present locally
+        local_folder_names = {folder for folder, _ in models}
+        for folder_name in KNOWN_MODEL_REPOS:
+            if folder_name not in local_folder_names:
+                models.append((folder_name, f"{folder_name} (auto-download)"))
 
         # Sort by display name for consistent ordering
         models.sort(key=lambda x: x[1])
@@ -366,7 +374,8 @@ def find_qwen_tokenizer_path(comfyui_models_dir: str) -> Optional[str]:
                                 logger.info(f"Found Qwen tokenizer in HF cache: {snapshot_path}")
                                 return snapshot_path
 
-    return None
+    # Priority 4: Auto-download tokenizer
+    return ensure_tokenizer(comfyui_models_dir)
 
 def detect_model_quantization(model_path: str) -> Optional[str]:
     """Detect if model is quantized from config files
@@ -907,7 +916,21 @@ class BaseVibeVoiceNode:
                 model_files_path = find_model_files_path(model_folder)
 
                 if not model_files_path:
-                    raise Exception(f"No valid model files found in {model_full_path}. Please ensure the model is properly downloaded.")
+                    # Try auto-download for known models
+                    downloaded_dir = ensure_model(model_folder, comfyui_models_dir)
+                    if downloaded_dir:
+                        # Invalidate model cache so the dropdown refreshes
+                        _model_cache["models"] = None
+                        _model_cache["first_load_logged"] = False
+                        model_files_path = find_model_files_path(model_folder)
+
+                if not model_files_path:
+                    raise Exception(
+                        f"No valid model files found in {model_full_path}.\n"
+                        f"If this is a custom model, please download it manually.\n"
+                        f"For built-in models (VibeVoice-1.5B, VibeVoice-Large), "
+                        f"select them from the dropdown to trigger auto-download."
+                    )
 
                 logger.info(f"Found model files at: {model_files_path}")
 
@@ -1081,8 +1104,8 @@ class BaseVibeVoiceNode:
                     # Auto mode - let transformers decide the best implementation
                     logger.info("Using auto attention implementation selection")
                 
-                # Load the model from local path only
-                model_kwargs["local_files_only"] = True
+                # Load from local path; model_files_path is always a local dir at this point
+                model_kwargs["local_files_only"] = True  # files are guaranteed present above
 
                 # Extract quantization mode flag before loading (it's not a model parameter)
                 quant_mode = model_kwargs.pop("_quantization_mode", None)

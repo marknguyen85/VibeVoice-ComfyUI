@@ -54,71 +54,84 @@ git clone https://github.com/Enemyx-net/VibeVoice-ComfyUI
 
 ## 📥 Model Installation
 
-### Manual Download Required
-Starting from version 1.6.0, models and tokenizer must be manually downloaded and placed in the correct folder. The wrapper no longer downloads them automatically.
+### Auto-Download (Recommended)
 
-### Download Links
+Built-in models and the tokenizer are downloaded automatically on first use — no manual setup required.
+
+**How it works:**
+1. Install the node as usual (see [Installation](#-installation))
+2. Open ComfyUI and add a **VibeVoice Single Speaker** or **VibeVoice Multiple Speakers** node
+3. The dropdown already lists available models, including ones not yet downloaded
+4. Select a model and run the node — the tokenizer and model files are downloaded automatically before generation starts
+5. Download progress is logged to the ComfyUI console with file names and sizes
+
+> **Note:** First run will take extra time depending on model size and connection speed. Subsequent runs load from local files.
+
+#### Supported Models (auto-download)
+
+| Model | Size | HuggingFace Repo |
+|-------|------|-----------------|
+| **VibeVoice-1.5B** | ~5.4 GB | [microsoft/VibeVoice-1.5B](https://huggingface.co/microsoft/VibeVoice-1.5B) |
+| **VibeVoice-Large** | ~18.7 GB | [aoi-ot/VibeVoice-Large](https://huggingface.co/aoi-ot/VibeVoice-Large) |
+
+**Tokenizer** (Qwen2.5-1.5B, ~50 MB) is also auto-downloaded automatically.
+
+#### Resume Support
+If a download is interrupted, restarting and running the node again will resume — already-downloaded files are skipped automatically.
+
+---
+
+### Manual Download (Optional)
+
+If you prefer to download files yourself or are in an air-gapped environment:
 
 #### Models
-You can download VibeVoice models from HuggingFace:
 
-| Model                  | Size   | Download Link |
-|------------------------|--------|---------------|
-| **VibeVoice-1.5B**     | ~5.4GB | [microsoft/VibeVoice-1.5B](https://huggingface.co/microsoft/VibeVoice-1.5B) |
-| **VibeVoice-Large**    | ~18.7GB | [aoi-ot/VibeVoice-Large](https://huggingface.co/aoi-ot/VibeVoice-Large) |
-| **VibeVoice-Large-Q8** | ~11.6GB | [FabioSarracino/VibeVoice-Large-Q8](https://huggingface.co/FabioSarracino/VibeVoice-Large-Q8) |
-| **VibeVoice-Large-Q4** | ~6.6GB | [DevParker/VibeVoice7b-low-vram](https://huggingface.co/DevParker/VibeVoice7b-low-vram) |
+| Model | Size | Download Link |
+|-------|------|---------------|
+| **VibeVoice-1.5B** | ~5.4 GB | [microsoft/VibeVoice-1.5B](https://huggingface.co/microsoft/VibeVoice-1.5B) |
+| **VibeVoice-Large** | ~18.7 GB | [aoi-ot/VibeVoice-Large](https://huggingface.co/aoi-ot/VibeVoice-Large) |
+| **VibeVoice-Large-Q8** | ~11.6 GB | [FabioSarracino/VibeVoice-Large-Q8](https://huggingface.co/FabioSarracino/VibeVoice-Large-Q8) |
+| **VibeVoice-Large-Q4** | ~6.6 GB | [DevParker/VibeVoice7b-low-vram](https://huggingface.co/DevParker/VibeVoice7b-low-vram) |
 
-#### Tokenizer (Required)
-VibeVoice uses the Qwen2.5-1.5B tokenizer:
-- Download from: [Qwen2.5-1.5B Tokenizer](https://huggingface.co/Qwen/Qwen2.5-1.5B/tree/main)
+#### Tokenizer
+
+- Download from: [Qwen2.5-1.5B](https://huggingface.co/Qwen/Qwen2.5-1.5B/tree/main)
 - Required files: `tokenizer_config.json`, `vocab.json`, `merges.txt`, `tokenizer.json`
 
-### Installation Steps
-1. Create the models folder if it doesn't exist:
-   ```
-   ComfyUI/models/vibevoice/
-   ```
+#### Folder Structure
 
-2. Download and organize files in the vibevoice folder:
-   ```
-   ComfyUI/models/vibevoice/
-   ├── tokenizer/                 # Place Qwen tokenizer files here
-   │   ├── tokenizer_config.json
-   │   ├── vocab.json
-   │   ├── merges.txt
-   │   └── tokenizer.json
-   ├── VibeVoice-1.5B/           # Model folder
-   │   ├── config.json
-   │   ├── model-00001-of-00003.safetensors
-   │   ├── model-00002-of-00003.safetensors
-   │   └── ... (other model files)
-   ├── VibeVoice-Large/
-   │   └── ... (model files)
-   └── my-custom-vibevoice/      # custom names are supported
-       └── ... (model files)
-   ```
+```
+ComfyUI/models/vibevoice/
+├── tokenizer/                 # Qwen tokenizer files
+│   ├── tokenizer_config.json
+│   ├── vocab.json
+│   ├── merges.txt
+│   └── tokenizer.json
+├── VibeVoice-1.5B/
+│   ├── config.json
+│   ├── model-00001-of-00003.safetensors
+│   └── ... (other model files)
+├── VibeVoice-Large/
+│   └── ... (model files)
+└── my-custom-vibevoice/       # custom model names are supported
+    └── ... (model files)
+```
 
-3. For models downloaded from HuggingFace using git-lfs or the HF CLI, you can also use the cache structure:
-   ```
-   ComfyUI/models/vibevoice/
-   └── models--microsoft--VibeVoice-1.5B/
-       └── snapshots/
-           └── [hash]/
-               └── ... (model files)
-   ```
+HuggingFace cache structure (`models--author--model/snapshots/[hash]/`) is also supported.
 
-4. Refresh your browser - the models will appear in the dropdown menu
+Refresh your browser after placing files — models will appear in the dropdown.
 
 ### Notes
-- The dropdown will show user-friendly names extracted from folder names
+- The dropdown shows user-friendly names extracted from folder names
 - Both regular folders and HuggingFace cache structures are supported
 - Models are rescanned on every browser refresh
 - Quantized models are automatically detected from their config files
 - The tokenizer is searched in this priority order:
-  1. `ComfyUI/models/vibevoice/tokenizer/` (recommended)
-  2. `ComfyUI/models/vibevoice/models--Qwen--Qwen2.5-1.5B/` (if exists from previous installations)
+  1. `ComfyUI/models/vibevoice/tokenizer/` (auto-downloaded here by default)
+  2. `ComfyUI/models/vibevoice/models--Qwen--Qwen2.5-1.5B/` (legacy location)
   3. HuggingFace cache (if available)
+  4. Auto-download from HuggingFace
 
 ## 🔧 Available Nodes
 
